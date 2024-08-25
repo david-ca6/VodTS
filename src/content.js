@@ -1,3 +1,6 @@
+
+let globalTimestamps = [];
+
 // Function to parse timestamps from a comment
 function parseTimestamps(comment) {
     // Updated regex to match all timestamp formats
@@ -62,22 +65,52 @@ function parseTimestamps(comment) {
   // Function to get timestamps
   function getTimestamps() {
     return new Promise((resolve, reject) => {
-      waitForComments()
-        .then(() => {
-          const timestampComments = findTimestampComments();
-          let timestamps = [];
-          for (const comment of timestampComments) {
-            timestamps = timestamps.concat(parseTimestamps(comment));
-          }
-          timestamps.sort((a, b) => a.time - b.time); // Sort timestamps by time
-          const videoInfo = getVideoInfo();
-          resolve({ timestamps, videoInfo });
-        })
-        .catch((error) => {
-          console.error('Error loading comments:', error);
-          reject(error);
-        });
+      if (globalTimestamps.length > 0) {
+        const videoInfo = getVideoInfo();
+        resolve({ timestamps: globalTimestamps, videoInfo });
+      } else {
+        waitForComments()
+          .then(() => {
+            const timestampComments = findTimestampComments();
+            let timestamps = [];
+            for (const comment of timestampComments) {
+              timestamps = timestamps.concat(parseTimestamps(comment));
+            }
+            timestamps.sort((a, b) => a.time - b.time); // Sort timestamps by time
+            globalTimestamps = timestamps;
+            const videoInfo = getVideoInfo();
+            resolve({ timestamps, videoInfo });
+          })
+          .catch((error) => {
+            console.error('Error loading comments:', error);
+            reject(error);
+          });
+      }
     });
+  }
+
+  function setTimestamps(newTimestamps) {
+    globalTimestamps = newTimestamps;
+  }
+
+
+// Function to add a new timestamp
+function addTimestamp() {
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+      const currentTime = Math.floor(videoElement.currentTime);
+      const description = prompt('Enter description for the new timestamp:');
+      if (description) {
+        globalTimestamps.push({
+          time: currentTime,
+          level: 0, // Default to chapter level
+          description: description.trim()
+        });
+        globalTimestamps.sort((a, b) => a.time - b.time);
+        return true;
+      }
+    }
+    return false;
   }
   
   // Listen for messages from the popup
@@ -87,23 +120,29 @@ function parseTimestamps(comment) {
         .then((result) => sendResponse(result))
         .catch((error) => sendResponse({ error: error.message }));
       return true; // Indicates that the response will be sent asynchronously
+    } else if (request.action === 'setTimestamps') {
+      setTimestamps(request.timestamps);
+      sendResponse({ success: true });
+    } else if (request.action === 'addTimestamp') {
+      const success = addTimestamp();
+      sendResponse({ success });
     } else if (request.action === 'seekTo') {
       const videoElement = document.querySelector('video');
       if (videoElement) {
         videoElement.currentTime = request.time;
       }
       sendResponse({ success: true });
-      return true;
     }
+    return true;
   });
   
   // Initialize timestamp checking when the page loads
-  window.addEventListener('load', () => {
-    getTimestamps()
-      .then(() => {
-        console.log('Timestamps loaded successfully');
-      })
-      .catch((error) => {
-        console.error('Error loading timestamps:', error);
-      });
-  });
+window.addEventListener('load', () => {
+  getTimestamps()
+    .then(() => {
+      console.log('Timestamps loaded successfully');
+    })
+    .catch((error) => {
+      console.error('Error loading timestamps:', error);
+    });
+});

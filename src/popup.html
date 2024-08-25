@@ -41,25 +41,33 @@
     #video-info {
       margin-bottom: 10px;
     }
-    button {
-      background-color: #3ea6ff;
-      color: #000000;
+    .button-container {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .action-button {
+      background-color: #3e3e3e;
+      color: #FFFFFF;
       border: none;
       padding: 5px 10px;
       cursor: pointer;
-      margin-bottom: 10px;
+      border-radius: 10px;
+      flex-grow: 1;
+      margin: 0 2px;
+      transition: background-color 0.2s;
     }
-    button:hover {
-      background-color: #65b8ff;
+    .action-button:hover {
+      background-color: #535353;
     }
   </style>
 </head>
 <body>
   <h2>CA6 VodTS</h2>
-  <button id="reload-button">Reload</button>
-  <button id="paste-button">Paste</button>
-  <button id="copy-button">Copy</button>
-  <button id="add-button">Add</button>
+  <button id="reload-button" class="action-button">Reload</button>
+  <button id="paste-button" class="action-button">Paste</button>
+  <button id="copy-button" class="action-button">Copy</button>
+  <button id="add-button" class="action-button">Add</button>
   <div id="video-info"></div>
   <ul id="timestamps"></ul>
   <script src="popup.js"></script>
