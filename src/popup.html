@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VodTS</title>
+  <style>
+    body {
+      width: 300px;
+      max-height: 600px;
+      overflow-y: auto;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      background-color: #202020;
+      color: #ffffff;
+    }
+    h2 {
+      margin-top: 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #444;
+    }
+    #timestamps {
+      list-style-type: none;
+      padding: 0;
+    }
+    .timestamp {
+      cursor: pointer;
+      padding: 5px 0;
+      transition: background-color 0.2s;
+    }
+    .timestamp:hover {
+      background-color: #383838;
+    }
+    .level-0 { padding-left: 0; }
+    .level-1 { padding-left: 20px; }
+    .level-2 { padding-left: 40px; }
+    .level-3 { padding-left: 60px; }
+    .past { color: #aaaaaa; }
+    .current {
+      color: #ffffff;
+      font-weight: bold;
+    }
+    #video-info {
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #3ea6ff;
+      color: #000000;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background-color: #65b8ff;
+    }
+  </style>
+</head>
+<body>
+  <h2>CA6 VodTS</h2>
+  <button id="reload-button">Reload</button>
+  <button id="paste-button">Paste</button>
+  <button id="copy-button">Copy</button>
+  <button id="add-button">Add</button>
+  <div id="video-info"></div>
+  <ul id="timestamps"></ul>
+  <script src="popup.js"></script>
+</body>
+</html>
