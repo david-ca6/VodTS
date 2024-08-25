@@ -1,9 +1,8 @@
 
 let globalTimestamps = [];
 
-// Function to parse timestamps from a comment
+// parse time
 function parseTimestamps(comment) {
-  // Updated regex to match all timestamp formats
   const regex = /(\d+:)?(\d+):(\d+)\s*(\.{0,3})\s*(.+)/g;
   const timestamps = [];
   let match;
@@ -19,8 +18,19 @@ function parseTimestamps(comment) {
 
   return timestamps;
 }
+
+// parse time for ttv
+function parseTimeString(timeString) {
+  const parts = timeString.split(':').map(Number);
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  } else if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  return 0;
+}
   
-// Function to find comments with timestamps
+// find timestamp in comments
 function findTimestampComments() {
   const comments = document.querySelectorAll('#content-text');
   const timestampComments = [];
@@ -32,21 +42,10 @@ function findTimestampComments() {
   }
   return timestampComments;
 }
-
-function parseTimeString(timeString) {
-  const parts = timeString.split(':').map(Number);
-  if (parts.length === 3) {
-    return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  } else if (parts.length === 2) {
-    return parts[0] * 60 + parts[1];
-  }
-  return 0;
-}
   
-// Function to get video information
+// get video information, yt or ttv
 function getVideoInfo() {
   const videoElement = document.querySelector('video');
-  // if youtube.com or youtu.be
   if (window.location.hostname === 'www.youtube.com' || window.location.hostname === 'youtu.be') {
     return {
       title: document.querySelector('h1.ytd-watch-metadata yt-formatted-string')?.textContent || 'Unknown Title',
@@ -71,8 +70,8 @@ function getVideoInfo() {
   }
 }
   
-// Function to wait for comments to load
-function waitForComments(maxAttempts = 100, interval = 1000) {
+// wait for comments
+function waitForComments(maxAttempts = 10, interval = 1000) {
   return new Promise((resolve, reject) => {
     let attempts = 0;
     const checkComments = () => {
@@ -90,7 +89,7 @@ function waitForComments(maxAttempts = 100, interval = 1000) {
   });
 }
 
-// Function to get timestamps
+// get timestamps
 function getTimestamps() {
   return new Promise((resolve, reject) => {
     if (globalTimestamps.length > 0) {
@@ -119,21 +118,25 @@ function getTimestamps() {
   });
 }
 
-  function setTimestamps(newTimestamps) {
-    globalTimestamps = newTimestamps;
-  }
+function setTimestamps(newTimestamps) {
+  globalTimestamps = newTimestamps;
+}
 
-
-// Function to add a new timestamp
+// add a timestamp
 function addTimestamp() {
-  const videoElement = getVideoInfo();
-  if (videoElement) {
-    const currentTime = Math.floor(videoElement.currentTime);
+  const videoInfo = getVideoInfo();
+  if (videoInfo) {
+    const currentTime = Math.floor(videoInfo.currentTime);
     const description = prompt('Enter description for the new timestamp:');
     if (description) {
+      const offsetStr = prompt('Enter time offset in seconds:');
+      const offset = offsetStr ? parseInt(offsetStr) : 0;
+      
+      const adjustedTime = Math.max(0, currentTime + offset);
+      
       globalTimestamps.push({
-        time: currentTime,
-        level: 0, // Default to chapter level
+        time: adjustedTime,
+        level: 0,
         description: description.trim()
       });
       globalTimestamps.sort((a, b) => a.time - b.time);
@@ -142,8 +145,8 @@ function addTimestamp() {
   }
   return false;
 }
-  
-  // Listen for messages from the popup
+
+// listener from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getTimestamps') {
     getTimestamps()
@@ -166,7 +169,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
   
-  // Initialize timestamp checking when the page loads
+// initialize get timestamps
 window.addEventListener('load', () => {
   getTimestamps()
     .then(() => {

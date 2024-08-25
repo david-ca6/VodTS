@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "VodTS",
     "version": "2.0.0",
-    "description": "Adds a side menu with clickable timestamps from YouTube comments",
+    "description": "Displays clickable timestamps from YouTube and Twitch",
     "permissions": [
         "activeTab",
         "scripting",
@@ -18,8 +18,19 @@
     "content_scripts": [
         {
         "matches": ["https://www.youtube.com/*", "https://www.twitch.tv/*"],
-        "js": ["content.js"],
-        "css": ["styles.css"]
+        "js": ["content.js"]
         }
-    ]
+    ],
+    "commands": {
+      "add_timestamps": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+Z",
+          "mac": "Command+Shift+Z"
+        },
+        "description": "Add a new Timestamps"
+      }
+    },
+    "background": {
+      "service_worker": "background.js"
+    }
 }
