@@ -95,7 +95,7 @@ function loadTimestamps() {
       } else if (response && response.error) {
         document.getElementById('timestamps').innerHTML = `<p>Error: ${response.error}</p>`;
       } else {
-        document.getElementById('timestamps').innerHTML = '<p>No timestamps found or not on a YouTube video page.</p>';
+        document.getElementById('timestamps').innerHTML = '<p>No timestamps found or not on a video page.</p><p>If on youtube, try scrolling down in the comment section to load the comments</p>';
       }
     });
   });

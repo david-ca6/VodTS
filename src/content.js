@@ -36,15 +36,24 @@ function parseTimestamps(comment) {
   // Function to get video information
   function getVideoInfo() {
     const videoElement = document.querySelector('video');
-    return {
-      title: document.querySelector('h1.ytd-watch-metadata yt-formatted-string')?.textContent || 'Unknown Title',
-      currentTime: videoElement ? videoElement.currentTime : 0,
-      duration: videoElement ? videoElement.duration : 0
-    };
+    // if youtube.com or youtu.be
+    if (window.location.hostname === 'www.youtube.com' || window.location.hostname === 'youtu.be') {
+      return {
+        title: document.querySelector('h1.ytd-watch-metadata yt-formatted-string')?.textContent || 'Unknown Title',
+        currentTime: videoElement ? videoElement.currentTime : 0,
+        duration: videoElement ? videoElement.duration : 0
+      };
+    } else if (window.location.hostname === 'www.twitch.tv') {
+      return {
+        title: document.title,
+        currentTime: videoElement ? videoElement.currentTime : 0,
+        duration: videoElement ? videoElement.duration : 0
+      };
+    }
   }
   
   // Function to wait for comments to load
-  function waitForComments(maxAttempts = 10, interval = 1000) {
+  function waitForComments(maxAttempts = 100, interval = 1000) {
     return new Promise((resolve, reject) => {
       let attempts = 0;
       const checkComments = () => {
@@ -69,6 +78,8 @@ function parseTimestamps(comment) {
         const videoInfo = getVideoInfo();
         resolve({ timestamps: globalTimestamps, videoInfo });
       } else {
+        const videoInfo = getVideoInfo();
+        resolve({ timestamps: globalTimestamps, videoInfo });
         waitForComments()
           .then(() => {
             const timestampComments = findTimestampComments();
