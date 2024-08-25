@@ -54,7 +54,7 @@ function formatTime(seconds) {
 
   // Function to format timestamps for copying
 function formatTimestampsForCopy(timestamps) {
-  return timestamps.map(t => `${formatTime(t.time)}${''.padEnd(t.level, '.')} ${t.description}`).join('\n');
+  return timestamps.map(t => `${formatTime(t.time)} ${''.padEnd(t.level, '.')}${t.description}`).join('\n');
 }
 
 // Function to parse pasted timestamps
