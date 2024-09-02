@@ -94,6 +94,67 @@ function loadTimestamps() {
   });
 }
 
+function showAddTimestampPopup() {
+  const popup = document.createElement('div');
+  popup.innerHTML = `
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+      <div style="background: #333; padding: 20px; border-radius: 10px;">
+        <h3>Add Timestamp</h3>
+        <input type="text" id="timestamp-description" placeholder="Description (use . for level)" style="width: 100%; margin-bottom: 10px;">
+        <input type="number" id="timestamp-offset" placeholder="Time offset (in seconds)" style="width: 100%; margin-bottom: 10px;">
+        <button id="confirm-add-timestamp">Add</button>
+        <button id="cancel-add-timestamp">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(popup);
+
+  const descriptionInput = document.getElementById('timestamp-description');
+  const offsetInput = document.getElementById('timestamp-offset');
+  const confirmButton = document.getElementById('confirm-add-timestamp');
+
+  descriptionInput.focus();
+
+  function addTimestamp() {
+    const description = descriptionInput.value;
+    const offset = parseInt(offsetInput.value) || 0;
+    
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, {action: 'addTimestamp', description, offset}, (response) => {
+        if (response && response.success) {
+          loadTimestamps();
+        } else {
+          alert('Failed to add timestamp');
+        }
+        document.body.removeChild(popup);
+      });
+    });
+  }
+
+  confirmButton.addEventListener('click', addTimestamp);
+
+  // Handle Enter key press in both input fields
+  descriptionInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addTimestamp();
+    }
+  });
+
+  offsetInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addTimestamp();
+    }
+  });
+
+  document.getElementById('cancel-add-timestamp').addEventListener('click', () => {
+    document.body.removeChild(popup);
+  });
+}
+
+
+
 function initPopup() {
   loadTimestamps();
 
@@ -137,17 +198,23 @@ function initPopup() {
     });
   });
 
-  document.getElementById('add-button').addEventListener('click', () => {
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, {action: 'addTimestamp'}, (response) => {
-        if (response && response.success) {
-          loadTimestamps();
-        } else {
-          alert('Failed to add timestamp');
-        }
-      });
-    });
+  document.getElementById('add-button').addEventListener('click', showAddTimestampPopup);
+  chrome.runtime.sendMessage({action: 'popupOpened'}, (response) => {
+    if (response && response.openedByShortcut) {
+      showAddTimestampPopup();
+    }
   });
+  // document.getElementById('add-button').addEventListener('click', () => {
+  //   chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+  //     chrome.tabs.sendMessage(tabs[0].id, {action: 'addTimestamp'}, (response) => {
+  //       if (response && response.success) {
+  //         loadTimestamps();
+  //       } else {
+  //         alert('Failed to add timestamp');
+  //       }
+  //     });
+  //   });
+  // });
 }
 
 document.addEventListener('DOMContentLoaded', initPopup);

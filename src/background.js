@@ -1,7 +1,15 @@
+let openedByShortcut = false;
+
 chrome.commands.onCommand.addListener((command) => {
   if (command === "add_timestamps") {
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, {action: "addTimestamp"});
-    });
+    openedByShortcut = true;
+    chrome.action.openPopup();
+  }
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'popupOpened') {
+    sendResponse({openedByShortcut: openedByShortcut});
+    openedByShortcut = false;
   }
 });

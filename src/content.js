@@ -123,25 +123,28 @@ function setTimestamps(newTimestamps) {
 }
 
 // add a timestamp
-function addTimestamp() {
+function addTimestamp(description = '', offset = 0) {
   const videoInfo = getVideoInfo();
   if (videoInfo) {
     const currentTime = Math.floor(videoInfo.currentTime);
-    const description = prompt('Enter description for the new timestamp:');
-    if (description) {
-      const offsetStr = prompt('Enter time offset in seconds:');
-      const offset = offsetStr ? parseInt(offsetStr) : 0;
-      
-      const adjustedTime = Math.max(0, currentTime + offset);
-      
-      globalTimestamps.push({
-        time: adjustedTime,
-        level: 0,
-        description: description.trim()
-      });
-      globalTimestamps.sort((a, b) => a.time - b.time);
-      return true;
+    const adjustedTime = Math.max(0, currentTime + offset);
+    
+    let level = 0;
+    if (description && typeof description === 'string') {
+      const levelMatch = description.match(/^(\.{0,3})/);
+      level = levelMatch ? levelMatch[1].length : 0;
+      description = description.replace(/^\.{0,3}/, '').trim();
+    } else {
+      description = '';
     }
+    
+    globalTimestamps.push({
+      time: adjustedTime,
+      level: level,
+      description: description
+    });
+    globalTimestamps.sort((a, b) => a.time - b.time);
+    return true;
   }
   return false;
 }
@@ -157,7 +160,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     setTimestamps(request.timestamps);
     sendResponse({ success: true });
   } else if (request.action === 'addTimestamp') {
-    const success = addTimestamp();
+    const success = addTimestamp(request.description, request.offset);
     sendResponse({ success });
   } else if (request.action === 'seekTo') {
     const videoElement = document.querySelector('video');
