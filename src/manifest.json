@@ -1,8 +1,11 @@
 {
     "manifest_version": 3,
     "name": "VodTS",
-    "version": "2.0.0",
+    "version": "2.00.01",
     "description": "Displays clickable timestamps from YouTube and Twitch",
+    "icons": {
+        "128": "icon128.png"
+    },
     "permissions": [
         "activeTab",
         "scripting",
