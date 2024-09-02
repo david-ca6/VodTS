@@ -7,13 +7,7 @@
         "128": "icon128.png"
     },
     "permissions": [
-        "activeTab",
-        "scripting",
         "clipboardRead"
-    ],
-    "host_permissions": [
-        "https://www.youtube.com/*",
-        "https://www.twitch.tv/*"
     ],
     "action": {
         "default_popup": "popup.html"
