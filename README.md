@@ -1,6 +1,8 @@
 # VodTS
 
-# Description
+### Get it on the [Chrome Web Store](https://chromewebstore.google.com/detail/vodts/kbommbhbkpmgcfhpallefoiboenmmpap)
+
+## Description
 VodTS is a browser extension that displays clickable timestamps for YouTube and Twitch.
 It allows you to easily navigate and share specific moments in videos by clicking on timestamps.
 On YouTube timestamps are loaded from the video's comments, or from the user's clipboard.
@@ -76,6 +78,10 @@ Resulting UI:
 
 ### Chrome
 
+#### Option 1
+1. Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/vodts/kbommbhbkpmgcfhpallefoiboenmmpap)
+
+#### Option 2
 1. Download the `unpacked` archive from the latest release and unzip it.
 2. Open Chrome (or any Chromium based browser) and navigate to `chrome://extensions`.
 3. Enable "Developer mode" in the top right corner.
@@ -85,11 +91,14 @@ Resulting UI:
 ### Chromium
 
 #### Option 1
+1. Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/vodts/kbommbhbkpmgcfhpallefoiboenmmpap)
+
+#### Option 2
 1. Download the `crx` file from the latest release.
 2. Open Chromium and navigate to `chrome://extensions`.
 3. Drag and drop the `crx` file into the page.
 
-#### Option 2
+#### Option 3
 1. Download the `unpacked` archive from the latest release and unzip it.
 2. Open Chromium and navigate to `chrome://extensions`.
 3. Enable "Developer mode" in the top right corner.
