@@ -1,7 +1,6 @@
 
 let globalTimestamps = [];
 
-// parse time
 function parseTimestamps(comment) {
   const regex = /(\d+:)?(\d+):(\d+)\s*(\.{0,3})\s*(.+)/g;
   const timestamps = [];
@@ -11,7 +10,7 @@ function parseTimestamps(comment) {
     const [, hours, minutes, seconds, level, description] = match;
     timestamps.push({
       time: (hours ? parseInt(hours) * 3600 : 0) + parseInt(minutes) * 60 + parseInt(seconds),
-      level: level.length, // 0 for chapters, 1-3 for subchapters and misc
+      level: level.length,
       description: description.trim()
     });
   }
@@ -19,7 +18,6 @@ function parseTimestamps(comment) {
   return timestamps;
 }
 
-// parse time for ttv
 function parseTimeString(timeString) {
   const parts = timeString.split(':').map(Number);
   if (parts.length === 3) {
@@ -30,7 +28,6 @@ function parseTimeString(timeString) {
   return 0;
 }
   
-// find timestamp in comments
 function findTimestampComments() {
   const comments = document.querySelectorAll('#content-text');
   const timestampComments = [];
@@ -43,7 +40,6 @@ function findTimestampComments() {
   return timestampComments;
 }
   
-// get video information, yt or ttv
 function getVideoInfo() {
   const videoElement = document.querySelector('video');
   if (window.location.hostname === 'www.youtube.com' || window.location.hostname === 'youtu.be') {
@@ -70,7 +66,6 @@ function getVideoInfo() {
   }
 }
   
-// wait for comments
 function waitForComments(maxAttempts = 10, interval = 1000) {
   return new Promise((resolve, reject) => {
     let attempts = 0;
@@ -89,7 +84,6 @@ function waitForComments(maxAttempts = 10, interval = 1000) {
   });
 }
 
-// get timestamps
 function getTimestamps() {
   return new Promise((resolve, reject) => {
     if (globalTimestamps.length > 0) {
@@ -105,14 +99,16 @@ function getTimestamps() {
           for (const comment of timestampComments) {
             timestamps = timestamps.concat(parseTimestamps(comment));
           }
-          timestamps.sort((a, b) => a.time - b.time); // Sort timestamps by time
+          timestamps.sort((a, b) => a.time - b.time);
           globalTimestamps = timestamps;
           const videoInfo = getVideoInfo();
           resolve({ timestamps, videoInfo });
+          injectTimestampDots(timestamps);
         })
         .catch((error) => {
           console.error('Error loading comments:', error);
-          reject(error);
+          const videoInfo = getVideoInfo();
+          resolve({ timestamps: globalTimestamps, videoInfo });
         });
     }
   });
@@ -120,9 +116,9 @@ function getTimestamps() {
 
 function setTimestamps(newTimestamps) {
   globalTimestamps = newTimestamps;
+  injectTimestampDots(newTimestamps);
 }
 
-// add a timestamp
 function addTimestamp(description = '', offset = 0) {
   const videoInfo = getVideoInfo();
   if (videoInfo) {
@@ -144,18 +140,87 @@ function addTimestamp(description = '', offset = 0) {
       description: description
     });
     globalTimestamps.sort((a, b) => a.time - b.time);
+    injectTimestampDots(globalTimestamps);
     return true;
   }
   return false;
 }
 
-// listener from the popup
+function injectTimestampDots(timestamps) {
+  if (window.location.hostname !== 'www.youtube.com' && window.location.hostname !== 'youtu.be') return;
+
+  const progressBar = document.querySelector('.ytp-progress-bar');
+  if (!progressBar) return;
+
+  const existingDots = progressBar.querySelectorAll('.timestamp-dot');
+  existingDots.forEach(dot => dot.remove());
+
+  const videoDuration = getVideoInfo().duration;
+
+  timestamps.forEach(timestamp => {
+    return;
+    if (timestamp.level === 0 || timestamp.level === 1) {
+      const dot = document.createElement('div');
+      if(timestamp.level === 0){
+        dot.className = 'timestamp-dot';
+        dot.style.position = 'absolute';
+        dot.style.width = '8px';
+        dot.style.height = '8px';
+        dot.style.borderRadius = '50%';
+        dot.style.backgroundColor = 'yellow';
+        dot.style.top = '50%';
+        dot.style.transform = 'translateY(-50%)';
+        dot.style.left = `${(timestamp.time / videoDuration) * 100}%`;
+        dot.style.zIndex = '1000';
+      } else if (timestamp.level === 1){
+        dot.className = 'timestamp-dot';
+        dot.style.position = 'absolute';
+        dot.style.width = '8px';
+        dot.style.height = '8px';
+        dot.style.borderRadius = '50%';
+        dot.style.backgroundColor = 'blue';
+        dot.style.top = '50%';
+        dot.style.transform = 'translateY(-50%)';
+        dot.style.left = `${(timestamp.time / videoDuration) * 100}%`;
+        dot.style.zIndex = '1000';
+      }
+
+      const tooltip = document.createElement('div');
+      tooltip.className = 'timestamp-tooltip';
+      tooltip.textContent = timestamp.description;
+      tooltip.style.position = 'absolute';
+      tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+      tooltip.style.color = 'white';
+      tooltip.style.padding = '5px';
+      tooltip.style.borderRadius = '3px';
+      tooltip.style.fontSize = '12px';
+      tooltip.style.top = '200%';
+      tooltip.style.left = '50%';
+      tooltip.style.transform = 'translateX(-50%)';
+      tooltip.style.display = 'none';
+      tooltip.style.whiteSpace = 'nowrap';
+
+      dot.appendChild(tooltip);
+
+      dot.addEventListener('mouseover', () => {
+        tooltip.style.display = 'block';
+      });
+
+      dot.addEventListener('mouseout', () => {
+        tooltip.style.display = 'none';
+      });
+
+      progressBar.appendChild(dot);
+    }
+  });
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getTimestamps') {
     getTimestamps()
       .then((result) => sendResponse(result))
       .catch((error) => sendResponse({ error: error.message }));
-    return true; // Indicates that the response will be sent asynchronously
+    return true;
   } else if (request.action === 'setTimestamps') {
     setTimestamps(request.timestamps);
     sendResponse({ success: true });
@@ -172,13 +237,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
   
-// initialize get timestamps
 window.addEventListener('load', () => {
   getTimestamps()
     .then(() => {
       console.log('Timestamps loaded successfully');
+      injectTimestampDots(globalTimestamps);
     })
     .catch((error) => {
       console.error('Error loading timestamps:', error);
     });
 });
+
+// observer.observe(document.body, {
+//   childList: true,
+//   subtree: true
+// });
