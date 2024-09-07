@@ -167,41 +167,38 @@ function removeTimestampDots() {
 }
 
 function injectTimestampDots(timestamps) {
-  if (window.location.hostname !== 'www.youtube.com' && window.location.hostname !== 'youtu.be') return;
+  const isYouTube = window.location.hostname === 'www.youtube.com' || window.location.hostname === 'youtu.be';
+  const isTwitch = window.location.hostname === 'www.twitch.tv';
 
-  const progressBar = document.querySelector('.ytp-progress-bar');
+  if (!isYouTube && !isTwitch) return;
+
+  let progressBar;
+  if (isYouTube) {
+    progressBar = document.querySelector('.ytp-progress-bar');
+  } else if (isTwitch) {
+    progressBar = document.querySelector('.seekbar-bar');
+  }
+
   if (!progressBar) return;
 
   removeTimestampDots();
 
-  const videoDuration = getVideoInfo().duration;
+  const videoInfo = getVideoInfo();
+  const videoDuration = videoInfo.duration;
 
   timestamps.forEach(timestamp => {
     if (timestamp.level === 0 || timestamp.level === 1) {
       const dot = document.createElement('div');
-      if(timestamp.level === 0){
-        dot.className = 'timestamp-dot';
-        dot.style.position = 'absolute';
-        dot.style.width = '10px';
-        dot.style.height = '10px';
-        dot.style.borderRadius = '50%';
-        dot.style.backgroundColor = 'yellow';
-        dot.style.top = '50%';
-        dot.style.transform = 'translateY(-50%)';
-        dot.style.left = `${(timestamp.time / videoDuration) * 100}%`;
-        dot.style.zIndex = '1000';
-      } else if (timestamp.level === 1){
-        dot.className = 'timestamp-dot';
-        dot.style.position = 'absolute';
-        dot.style.width = '10px';
-        dot.style.height = '10px';
-        dot.style.borderRadius = '50%';
-        dot.style.backgroundColor = 'blue';
-        dot.style.top = '50%';
-        dot.style.transform = 'translateY(-50%)';
-        dot.style.left = `${(timestamp.time / videoDuration) * 100}%`;
-        dot.style.zIndex = '1000';
-      }
+      dot.className = 'timestamp-dot';
+      dot.style.position = 'absolute';
+      dot.style.width = '10px';
+      dot.style.height = '10px';
+      dot.style.borderRadius = '50%';
+      dot.style.backgroundColor = timestamp.level === 0 ? 'yellow' : 'blue';
+      dot.style.top = '50%';
+      dot.style.transform = 'translateY(-50%)';
+      dot.style.left = `${(timestamp.time / videoDuration) * 100}%`;
+      dot.style.zIndex = '1000';
 
       const tooltip = document.createElement('div');
       tooltip.className = 'timestamp-tooltip';
