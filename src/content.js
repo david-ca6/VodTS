@@ -1,5 +1,6 @@
 
 let globalTimestamps = [];
+let currentVideoTitle = '';
 
 function parseTimestamps(comment) {
   const regex = /(\d+:)?(\d+):(\d+)\s*(\.{0,3})\s*(.+)/g;
@@ -42,23 +43,27 @@ function findTimestampComments() {
   
 function getVideoInfo() {
   const videoElement = document.querySelector('video');
+  let title = '';
   if (window.location.hostname === 'www.youtube.com' || window.location.hostname === 'youtu.be') {
+    title = document.querySelector('h1.ytd-watch-metadata yt-formatted-string')?.textContent || 'Unknown Title';
     return {
-      title: document.querySelector('h1.ytd-watch-metadata yt-formatted-string')?.textContent || 'Unknown Title',
+      title: title,
       currentTime: videoElement ? videoElement.currentTime : 0,
       duration: videoElement ? videoElement.duration : 0
     };
   } else if (window.location.hostname === 'www.twitch.tv') {
     if (window.location.pathname.startsWith('/videos/')){
+      title = document.title;
       return {
-        title: document.title,
+        title: title,
         currentTime: videoElement ? videoElement.currentTime : 0,
         duration: videoElement ? videoElement.duration : 0
       };
     } else {
       const twitchLiveTimeElement = document.querySelector('.live-time'); 
+      title = document.title;
       return {
-        title: document.title,
+        title: title,
         currentTime: twitchLiveTimeElement ? parseTimeString(twitchLiveTimeElement.textContent) : 0,
         duration: 0
       };
@@ -86,11 +91,16 @@ function waitForComments(maxAttempts = 10, interval = 1000) {
 
 function getTimestamps() {
   return new Promise((resolve, reject) => {
+    const videoInfo = getVideoInfo();
+    if (videoInfo.title !== currentVideoTitle) {
+      globalTimestamps = [];
+      currentVideoTitle = videoInfo.title;
+      removeTimestampDots();
+    }
+    
     if (globalTimestamps.length > 0) {
-      const videoInfo = getVideoInfo();
       resolve({ timestamps: globalTimestamps, videoInfo });
     } else {
-      const videoInfo = getVideoInfo();
       resolve({ timestamps: globalTimestamps, videoInfo });
       waitForComments()
         .then(() => {
@@ -101,13 +111,11 @@ function getTimestamps() {
           }
           timestamps.sort((a, b) => a.time - b.time);
           globalTimestamps = timestamps;
-          const videoInfo = getVideoInfo();
           resolve({ timestamps, videoInfo });
           injectTimestampDots(timestamps);
         })
         .catch((error) => {
           console.error('Error loading comments:', error);
-          const videoInfo = getVideoInfo();
           resolve({ timestamps: globalTimestamps, videoInfo });
         });
     }
@@ -116,6 +124,7 @@ function getTimestamps() {
 
 function setTimestamps(newTimestamps) {
   globalTimestamps = newTimestamps;
+  removeTimestampDots();
   injectTimestampDots(newTimestamps);
 }
 
@@ -140,10 +149,21 @@ function addTimestamp(description = '', offset = 0) {
       description: description
     });
     globalTimestamps.sort((a, b) => a.time - b.time);
+    removeTimestampDots();
     injectTimestampDots(globalTimestamps);
     return true;
   }
   return false;
+}
+
+function removeTimestampDots() {
+  if (window.location.hostname !== 'www.youtube.com' && window.location.hostname !== 'youtu.be') return;
+
+  const progressBar = document.querySelector('.ytp-progress-bar');
+  if (!progressBar) return;
+
+  const existingDots = progressBar.querySelectorAll('.timestamp-dot');
+  existingDots.forEach(dot => dot.remove());
 }
 
 function injectTimestampDots(timestamps) {
@@ -152,20 +172,18 @@ function injectTimestampDots(timestamps) {
   const progressBar = document.querySelector('.ytp-progress-bar');
   if (!progressBar) return;
 
-  const existingDots = progressBar.querySelectorAll('.timestamp-dot');
-  existingDots.forEach(dot => dot.remove());
+  removeTimestampDots();
 
   const videoDuration = getVideoInfo().duration;
 
   timestamps.forEach(timestamp => {
-    return;
     if (timestamp.level === 0 || timestamp.level === 1) {
       const dot = document.createElement('div');
       if(timestamp.level === 0){
         dot.className = 'timestamp-dot';
         dot.style.position = 'absolute';
-        dot.style.width = '8px';
-        dot.style.height = '8px';
+        dot.style.width = '10px';
+        dot.style.height = '10px';
         dot.style.borderRadius = '50%';
         dot.style.backgroundColor = 'yellow';
         dot.style.top = '50%';
@@ -175,8 +193,8 @@ function injectTimestampDots(timestamps) {
       } else if (timestamp.level === 1){
         dot.className = 'timestamp-dot';
         dot.style.position = 'absolute';
-        dot.style.width = '8px';
-        dot.style.height = '8px';
+        dot.style.width = '10px';
+        dot.style.height = '10px';
         dot.style.borderRadius = '50%';
         dot.style.backgroundColor = 'blue';
         dot.style.top = '50%';
@@ -233,6 +251,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       videoElement.currentTime = request.time;
     }
     sendResponse({ success: true });
+  } else if (request.action === 'reloadTimestamps') {
+    removeTimestampDots();
+    getTimestamps()
+      .then(() => {
+        injectTimestampDots(globalTimestamps);
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        console.error('Error reloading timestamps:', error);
+        sendResponse({ success: false, error: error.message });
+      });
+    return true;
   }
   return true;
 });
@@ -247,8 +277,3 @@ window.addEventListener('load', () => {
       console.error('Error loading timestamps:', error);
     });
 });
-
-// observer.observe(document.body, {
-//   childList: true,
-//   subtree: true
-// });

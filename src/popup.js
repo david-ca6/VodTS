@@ -76,7 +76,6 @@ function loadTimestamps() {
         updateVideoInfo(response.videoInfo);
         updateHighlighting(response.videoInfo.currentTime);
 
-        // Update highlighting every second
         setInterval(() => {
           chrome.tabs.sendMessage(tabs[0].id, {action: 'getTimestamps'}, (response) => {
             if (response && response.videoInfo) {
@@ -133,7 +132,6 @@ function showAddTimestampPopup() {
 
   confirmButton.addEventListener('click', addTimestamp);
 
-  // Handle Enter key press in both input fields
   descriptionInput.addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
@@ -153,14 +151,20 @@ function showAddTimestampPopup() {
   });
 }
 
-
-
 function initPopup() {
   loadTimestamps();
 
   document.getElementById('reload-button').addEventListener('click', () => {
     document.getElementById('timestamps').innerHTML = '<p>Reloading timestamps...</p>';
-    loadTimestamps();
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, {action: 'reloadTimestamps'}, (response) => {
+        if (response && response.success) {
+          loadTimestamps();
+        } else {
+          alert('Failed to reload timestamps');
+        }
+      });
+    });
   });
 
   document.getElementById('paste-button').addEventListener('click', async () => {
@@ -204,17 +208,6 @@ function initPopup() {
       showAddTimestampPopup();
     }
   });
-  // document.getElementById('add-button').addEventListener('click', () => {
-  //   chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-  //     chrome.tabs.sendMessage(tabs[0].id, {action: 'addTimestamp'}, (response) => {
-  //       if (response && response.success) {
-  //         loadTimestamps();
-  //       } else {
-  //         alert('Failed to add timestamp');
-  //       }
-  //     });
-  //   });
-  // });
 }
 
 document.addEventListener('DOMContentLoaded', initPopup);
