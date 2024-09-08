@@ -30,10 +30,16 @@ function createTimestampElements(timestamps) {
     li.classList.add('timestamp', `level-${timestamp.level}`);
     li.textContent = `${formatTime(timestamp.time)} ${timestamp.description}`;
     li.dataset.time = timestamp.time;
+    li.dataset.level = timestamp.level;
+    li.dataset.description = timestamp.description;
     li.addEventListener('click', () => {
       chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
         chrome.tabs.sendMessage(tabs[0].id, {action: 'seekTo', time: timestamp.time});
       });
+    });
+    li.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      showEditTimestampPopup(timestamp, li);
     });
     timestampsList.appendChild(li);
   });
@@ -147,6 +153,59 @@ function showAddTimestampPopup() {
   });
 
   document.getElementById('cancel-add-timestamp').addEventListener('click', () => {
+    document.body.removeChild(popup);
+  });
+}
+
+function showEditTimestampPopup(timestamp, element) {
+  const popup = document.createElement('div');
+  popup.innerHTML = `
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+      <div style="background: #333; padding: 20px; border-radius: 10px;">
+        <h3>Edit Timestamp</h3>
+        <input type="text" id="edit-timestamp-description" value="${timestamp.description}" style="width: 100%; margin-bottom: 10px;">
+        <button id="confirm-edit-timestamp">Save</button>
+        <button id="cancel-edit-timestamp">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(popup);
+
+  const descriptionInput = document.getElementById('edit-timestamp-description');
+  const confirmButton = document.getElementById('confirm-edit-timestamp');
+
+  descriptionInput.focus();
+
+  function editTimestamp() {
+    const newDescription = descriptionInput.value;
+    
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        action: 'editTimestamp',
+        time: timestamp.time,
+        newDescription: newDescription
+      }, (response) => {
+        if (response && response.success) {
+          element.dataset.description = newDescription;
+          element.textContent = `${formatTime(timestamp.time)} ${newDescription}`;
+        } else {
+          alert('Failed to edit timestamp');
+        }
+        document.body.removeChild(popup);
+      });
+    });
+  }
+
+  confirmButton.addEventListener('click', editTimestamp);
+
+  descriptionInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      editTimestamp();
+    }
+  });
+
+  document.getElementById('cancel-edit-timestamp').addEventListener('click', () => {
     document.body.removeChild(popup);
   });
 }

@@ -238,6 +238,17 @@ function injectTimestampDots(timestamps) {
   });
 }
 
+function editTimestamp(time, newDescription) {
+  const timestampIndex = globalTimestamps.findIndex(t => t.time === time);
+  if (timestampIndex !== -1) {
+    globalTimestamps[timestampIndex].description = newDescription;
+    removeTimestampDots();
+    injectTimestampDots(globalTimestamps);
+    return true;
+  }
+  return false;
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getTimestamps') {
     getTimestamps()
@@ -267,6 +278,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.error('Error reloading timestamps:', error);
         sendResponse({ success: false, error: error.message });
       });
+    return true;
+  } else if (request.action === 'editTimestamp') {
+    const success = editTimestamp(request.time, request.newDescription);
+    sendResponse({ success });
     return true;
   }
   return true;
