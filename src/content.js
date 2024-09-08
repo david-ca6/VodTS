@@ -191,12 +191,14 @@ function injectTimestampDots(timestamps) {
       const dot = document.createElement('div');
       dot.className = 'timestamp-dot';
       dot.style.position = 'absolute';
-      dot.style.width = '10px';
-      dot.style.height = '10px';
-      dot.style.borderRadius = '50%';
-      dot.style.backgroundColor = timestamp.level === 0 ? 'yellow' : 'blue';
-      dot.style.top = '50%';
-      dot.style.transform = 'translateY(-50%)';
+      dot.style.width = '0';
+      dot.style.height = '0';
+      dot.style.borderLeft = '5px solid transparent';
+      dot.style.borderRight = '5px solid transparent';
+      dot.style.borderBottom = `10px solid ${timestamp.level === 0 ? '#fcea87' : '#2195f1'}`;
+      if (isTwitch) {
+        dot.style.bottom = '-10px';
+      }
       dot.style.left = `${(timestamp.time / videoDuration) * 100}%`;
       dot.style.zIndex = '1000';
 
@@ -209,11 +211,17 @@ function injectTimestampDots(timestamps) {
       tooltip.style.padding = '5px';
       tooltip.style.borderRadius = '3px';
       tooltip.style.fontSize = '12px';
-      tooltip.style.top = '200%';
-      tooltip.style.left = '50%';
-      tooltip.style.transform = 'translateX(-50%)';
       tooltip.style.display = 'none';
       tooltip.style.whiteSpace = 'nowrap';
+      tooltip.style.marginTop = '5px';
+
+      if (timestamp.time < videoDuration / 2) {
+        tooltip.style.left = '0';
+        tooltip.style.transform = 'translateY(50%)';
+      } else {
+        tooltip.style.right = '0';
+        tooltip.style.transform = 'translateY(50%)';
+      }
 
       dot.appendChild(tooltip);
 
