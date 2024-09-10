@@ -55,7 +55,7 @@ function updateVideoInfo(videoInfo) {
 }
 
 function formatTimestampsForCopy(timestamps) {
-  return timestamps.map(t => `${formatTime(t.time)} ${''.padEnd(t.level, '.')}${t.description}`).join('\n');
+  return timestamps.map(t => `~${formatTime(t.time)} ${''.padEnd(t.level, '.')}${t.description}`).join('\n');
 }
 
 function parseTimestamps(text) {
@@ -266,6 +266,50 @@ function initPopup() {
     if (response && response.openedByShortcut) {
       showAddTimestampPopup();
     }
+  });
+
+  document.getElementById('settings-button').addEventListener('click', () => {
+    const mainTab = document.getElementById('main-tab');
+    const settingsTab = document.getElementById('settings-tab');
+    if (mainTab.style.display !== 'none') {
+      mainTab.style.display = 'none';
+      settingsTab.style.display = 'block';
+    } else {
+      mainTab.style.display = 'block';
+      settingsTab.style.display = 'none';
+    }
+  });
+
+  const onlyVodtsCheckbox = document.getElementById('only-vodts-checkbox');
+  const displayMarkerCheckbox = document.getElementById('display-marker-checkbox');
+
+  function updateSettings() {
+    const settings = {
+      onlyVodTS: onlyVodtsCheckbox.checked,
+      displayMarker: displayMarkerCheckbox.checked
+    };
+
+    chrome.storage.local.set(settings, () => {
+      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: 'updateSettings',
+          settings: {
+            onlyVodts: settings.onlyVodTS,
+            showMarker: settings.displayMarker
+          }
+        }, () => {
+          loadTimestamps();
+        });
+      });
+    });
+  }
+
+  onlyVodtsCheckbox.addEventListener('change', updateSettings);
+  displayMarkerCheckbox.addEventListener('change', updateSettings);
+
+  chrome.storage.local.get(['onlyVodTS', 'displayMarker'], (result) => {
+    onlyVodtsCheckbox.checked = result.onlyVodTS || false;
+    displayMarkerCheckbox.checked = result.displayMarker !== false;
   });
 }
 

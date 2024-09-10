@@ -15,3 +15,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     openedByShortcut = false;
   }
 });
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'getSettings') {
+    chrome.storage.sync.get(['onlyVodTS', 'displayMarker'], (result) => {
+      sendResponse({
+        onlyVodTS: result.onlyVodTS || false,
+        displayMarker: result.displayMarker !== false
+      });
+    });
+    return true;
+  } else if (request.action === 'updateSettings') {
+    chrome.storage.sync.set(request.settings, () => {
+      sendResponse({success: true});
+    });
+    return true;
+  }
+});

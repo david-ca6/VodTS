@@ -1,18 +1,24 @@
-
 let globalTimestamps = [];
 let currentVideoTitle = '';
+let settings = {
+  onlyVodts: false,
+  showMarker: true,
+  userFilter: ''
+};
 
 function parseTimestamps(comment) {
-  const regex = /(\d+:)?(\d+):(\d+)\s*(\.{0,3})\s*(.+)/g;
+  const regex = /~?(\d+:)?(\d+):(\d+)~?\s*(\.{0,3})\s*(.+)/g;
   const timestamps = [];
   let match;
 
   while ((match = regex.exec(comment)) !== null) {
     const [, hours, minutes, seconds, level, description] = match;
+    const isVodTS = comment.includes(`~${hours || ''}${minutes}:${seconds}`);
     timestamps.push({
       time: (hours ? parseInt(hours) * 3600 : 0) + parseInt(minutes) * 60 + parseInt(seconds),
       level: level.length,
-      description: description.trim()
+      description: description.trim(),
+      isVodTS: isVodTS
     });
   }
 
@@ -112,7 +118,9 @@ function getTimestamps() {
           timestamps.sort((a, b) => a.time - b.time);
           globalTimestamps = timestamps;
           resolve({ timestamps, videoInfo });
-          injectTimestampDots(timestamps);
+          if (settings.showMarker) {
+            injectTimestampDots(timestamps);
+          }
         })
         .catch((error) => {
           console.error('Error loading comments:', error);
@@ -125,7 +133,9 @@ function getTimestamps() {
 function setTimestamps(newTimestamps) {
   globalTimestamps = newTimestamps;
   removeTimestampDots();
-  injectTimestampDots(newTimestamps);
+  if (settings.showMarker) {
+    injectTimestampDots(newTimestamps);
+  }
 }
 
 function addTimestamp(description = '', offset = 0) {
@@ -146,11 +156,14 @@ function addTimestamp(description = '', offset = 0) {
     globalTimestamps.push({
       time: adjustedTime,
       level: level,
-      description: description
+      description: description,
+      isVodTS: false
     });
     globalTimestamps.sort((a, b) => a.time - b.time);
     removeTimestampDots();
-    injectTimestampDots(globalTimestamps);
+    if (settings.showMarker) {
+      injectTimestampDots(globalTimestamps);
+    }
     return true;
   }
   return false;
@@ -167,6 +180,8 @@ function removeTimestampDots() {
 }
 
 function injectTimestampDots(timestamps) {
+  if (!settings.showMarker) return;
+
   const isYouTube = window.location.hostname === 'www.youtube.com' || window.location.hostname === 'youtu.be';
   const isTwitch = window.location.hostname === 'www.twitch.tv';
 
@@ -187,7 +202,7 @@ function injectTimestampDots(timestamps) {
   const videoDuration = videoInfo.duration;
 
   timestamps.forEach(timestamp => {
-    if (timestamp.level === 0 || timestamp.level === 1) {
+    if ((timestamp.level === 0 || timestamp.level === 1) && (!settings.onlyVodts || timestamp.isVodTS)) {
       const dot = document.createElement('div');
       dot.className = 'timestamp-dot';
       dot.style.position = 'absolute';
@@ -243,16 +258,42 @@ function editTimestamp(time, newDescription) {
   if (timestampIndex !== -1) {
     globalTimestamps[timestampIndex].description = newDescription;
     removeTimestampDots();
-    injectTimestampDots(globalTimestamps);
+    if (settings.showMarker) {
+      injectTimestampDots(globalTimestamps);
+    }
     return true;
   }
   return false;
 }
 
+function getUserList() {
+  const userSet = new Set();
+  globalTimestamps.forEach(timestamp => {
+    const userMatch = timestamp.description.match(/^([^:]+):/);
+    if (userMatch) {
+      userSet.add(userMatch[1].trim());
+    }
+  });
+  return Array.from(userSet);
+}
+
+function filterTimestamps(timestamps) {
+  if (settings.onlyVodts) {
+    timestamps = timestamps.filter(t => t.isVodTS);
+  }
+  if (settings.userFilter) {
+    timestamps = timestamps.filter(t => t.description.toLowerCase().startsWith(settings.userFilter.toLowerCase() + ':'));
+  }
+  return timestamps;
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getTimestamps') {
     getTimestamps()
-      .then((result) => sendResponse(result))
+      .then((result) => {
+        result.timestamps = filterTimestamps(result.timestamps);
+        sendResponse(result);
+      })
       .catch((error) => sendResponse({ error: error.message }));
     return true;
   } else if (request.action === 'setTimestamps') {
@@ -271,7 +312,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     removeTimestampDots();
     getTimestamps()
       .then(() => {
-        injectTimestampDots(globalTimestamps);
+        if (settings.showMarker) {
+          injectTimestampDots(filterTimestamps(globalTimestamps));
+        }
         sendResponse({ success: true });
       })
       .catch((error) => {
@@ -283,17 +326,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const success = editTimestamp(request.time, request.newDescription);
     sendResponse({ success });
     return true;
+  } else if (request.action === 'updateSettings') {
+    settings = { ...settings, ...request.settings };
+    if (settings.showMarker) {
+      injectTimestampDots(filterTimestamps(globalTimestamps));
+    } else {
+      removeTimestampDots();
+    }
+    sendResponse({ success: true });
+  } else if (request.action === 'getUserList') {
+    sendResponse({ users: getUserList() });
   }
   return true;
 });
   
 window.addEventListener('load', () => {
-  getTimestamps()
-    .then(() => {
-      console.log('Timestamps loaded successfully');
-      injectTimestampDots(globalTimestamps);
-    })
-    .catch((error) => {
-      console.error('Error loading timestamps:', error);
-    });
+  chrome.storage.local.get(['onlyVodTS', 'displayMarker'], (result) => {
+    settings = {
+      onlyVodts: result.onlyVodTS || false,
+      showMarker: result.displayMarker !== false,
+      userFilter: ''
+    };
+    getTimestamps()
+      .then(() => {
+        console.log('Timestamps loaded successfully');
+        if (settings.showMarker) {
+          injectTimestampDots(filterTimestamps(globalTimestamps));
+        }
+      })
+      .catch((error) => {
+        console.error('Error loading timestamps:', error);
+      });
+  });
 });
