@@ -214,7 +214,8 @@ function injectTimestampDots(timestamps) {
       if (isTwitch) {
         dot.style.bottom = '-10px';
       }
-      dot.style.left = `${(timestamp.time / videoDuration) * 100}%`;
+      // Offset the dot by half its width (5px) to center it on the timestamp
+      dot.style.left = `calc(${(timestamp.time / videoDuration) * 100}% - 5px)`;
       dot.style.zIndex = '1000';
 
       const tooltip = document.createElement('div');
