@@ -50,10 +50,13 @@ function findTimestampComments() {
 function getVideoInfo() {
   const videoElement = document.querySelector('video');
   let title = '';
+  const url = window.location.href;
+
   if (window.location.hostname === 'www.youtube.com' || window.location.hostname === 'youtu.be') {
     title = document.querySelector('h1.ytd-watch-metadata yt-formatted-string')?.textContent || 'Unknown Title';
     return {
       title: title,
+      url: url,
       currentTime: videoElement ? videoElement.currentTime : 0,
       duration: videoElement ? videoElement.duration : 0
     };
@@ -62,6 +65,7 @@ function getVideoInfo() {
       title = document.title;
       return {
         title: title,
+        url: url,
         currentTime: videoElement ? videoElement.currentTime : 0,
         duration: videoElement ? videoElement.duration : 0
       };
@@ -70,6 +74,7 @@ function getVideoInfo() {
       title = document.title;
       return {
         title: title,
+        url: url,
         currentTime: twitchLiveTimeElement ? parseTimeString(twitchLiveTimeElement.textContent) : 0,
         duration: 0
       };

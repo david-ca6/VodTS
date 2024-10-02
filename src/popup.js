@@ -54,8 +54,12 @@ function updateVideoInfo(videoInfo) {
   `;
 }
 
-function formatTimestampsForCopy(timestamps) {
-  return timestamps.map(t => `~${formatTime(t.time)} ${''.padEnd(t.level, '.')}${t.description}`).join('\n');
+function formatTimestampsForCopy(timestamps, videoInfo) {
+  const url = videoInfo.url;
+  const title = videoInfo.title;
+  const formattedTimestamps = timestamps.map(t => `~${formatTime(t.time)} ${''.padEnd(t.level, '.')}${t.description}`).join('\n');
+  
+  return `${title}\n${url}\n[~VodTS~]\n${formattedTimestamps}`;
 }
 
 function parseTimestamps(text) {
@@ -249,7 +253,7 @@ function initPopup() {
     chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
       chrome.tabs.sendMessage(tabs[0].id, {action: 'getTimestamps'}, (response) => {
         if (response && response.timestamps) {
-          const formattedTimestamps = formatTimestampsForCopy(response.timestamps);
+          const formattedTimestamps = formatTimestampsForCopy(response.timestamps, response.videoInfo);
           navigator.clipboard.writeText(formattedTimestamps).then(() => {
           }, () => {
             alert('Failed to copy timestamps');
