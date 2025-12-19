@@ -143,11 +143,10 @@ function setTimestamps(newTimestamps) {
   }
 }
 
-function addTimestamp(description = '', offset = 0) {
+function addTimestamp(description = '', time = null) {
   const videoInfo = getVideoInfo();
   if (videoInfo) {
-    const currentTime = Math.floor(videoInfo.currentTime);
-    const adjustedTime = Math.max(0, currentTime + offset);
+    const timestampTime = time !== null ? time : Math.floor(videoInfo.currentTime);
     
     let level = 0;
     if (description && typeof description === 'string') {
@@ -159,7 +158,7 @@ function addTimestamp(description = '', offset = 0) {
     }
     
     globalTimestamps.push({
-      time: adjustedTime,
+      time: timestampTime,
       level: level,
       description: description,
       isVodTS: false
@@ -306,7 +305,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     setTimestamps(request.timestamps);
     sendResponse({ success: true });
   } else if (request.action === 'addTimestamp') {
-    const success = addTimestamp(request.description, request.offset);
+    const success = addTimestamp(request.description, request.time);
     sendResponse({ success });
   } else if (request.action === 'seekTo') {
     const videoElement = document.querySelector('video');

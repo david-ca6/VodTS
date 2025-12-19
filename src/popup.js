@@ -103,60 +103,84 @@ function loadTimestamps() {
 }
 
 function showAddTimestampPopup() {
-  const popup = document.createElement('div');
-  popup.innerHTML = `
-    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
-      <div style="background: #333; padding: 20px; border-radius: 10px;">
-        <h3>Add Timestamp</h3>
-        <input type="text" id="timestamp-description" placeholder="Description (use . for level)" style="width: 100%; margin-bottom: 10px;">
-        <input type="number" id="timestamp-offset" placeholder="Time offset (in seconds)" style="width: 100%; margin-bottom: 10px;">
-        <button id="confirm-add-timestamp">Add</button>
-        <button id="cancel-add-timestamp">Cancel</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(popup);
+  chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+    chrome.tabs.sendMessage(tabs[0].id, {action: 'getTimestamps'}, (response) => {
+      if (!response || !response.videoInfo) {
+        alert('Failed to get video info');
+        return;
+      }
 
-  const descriptionInput = document.getElementById('timestamp-description');
-  const offsetInput = document.getElementById('timestamp-offset');
-  const confirmButton = document.getElementById('confirm-add-timestamp');
+      const currentTime = Math.floor(response.videoInfo.currentTime);
+      const formattedTime = formatTime(currentTime);
 
-  descriptionInput.focus();
+      const popup = document.createElement('div');
+      popup.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+          <div style="background: #333; padding: 20px; border-radius: 10px;">
+            <h3>Add Timestamp</h3>
+            <input type="text" id="timestamp-description" placeholder="Description (use . for level)" style="width: 100%; margin-bottom: 10px;">
+            <input type="text" id="timestamp-time" value="${formattedTime}" placeholder="H:MM:SS" style="width: 100%; margin-bottom: 10px;">
+            <button id="confirm-add-timestamp">Add</button>
+            <button id="cancel-add-timestamp">Cancel</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(popup);
 
-  function addTimestamp() {
-    const description = descriptionInput.value;
-    const offset = parseInt(offsetInput.value) || 0;
-    
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, {action: 'addTimestamp', description, offset}, (response) => {
-        if (response && response.success) {
-          loadTimestamps();
-        } else {
-          alert('Failed to add timestamp');
+      const descriptionInput = document.getElementById('timestamp-description');
+      const timeInput = document.getElementById('timestamp-time');
+      const confirmButton = document.getElementById('confirm-add-timestamp');
+
+      descriptionInput.focus();
+
+      function parseTimeInput(timeString) {
+        const parts = timeString.split(':').map(p => parseInt(p) || 0);
+        if (parts.length === 3) {
+          return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        } else if (parts.length === 2) {
+          return parts[0] * 60 + parts[1];
+        } else if (parts.length === 1) {
+          return parts[0];
         }
+        return 0;
+      }
+
+      function addTimestamp() {
+        const description = descriptionInput.value;
+        const time = parseTimeInput(timeInput.value);
+        
+        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+          chrome.tabs.sendMessage(tabs[0].id, {action: 'addTimestamp', description, time}, (response) => {
+            if (response && response.success) {
+              loadTimestamps();
+            } else {
+              alert('Failed to add timestamp');
+            }
+            document.body.removeChild(popup);
+          });
+        });
+      }
+
+      confirmButton.addEventListener('click', addTimestamp);
+
+      descriptionInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          addTimestamp();
+        }
+      });
+
+      timeInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          addTimestamp();
+        }
+      });
+
+      document.getElementById('cancel-add-timestamp').addEventListener('click', () => {
         document.body.removeChild(popup);
       });
     });
-  }
-
-  confirmButton.addEventListener('click', addTimestamp);
-
-  descriptionInput.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      addTimestamp();
-    }
-  });
-
-  offsetInput.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      addTimestamp();
-    }
-  });
-
-  document.getElementById('cancel-add-timestamp').addEventListener('click', () => {
-    document.body.removeChild(popup);
   });
 }
 
