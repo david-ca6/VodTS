@@ -1,2 +1,13 @@
 bin/*
 firefox/*
+node_modules/*
+dist/*
+docs/*
+.DS_Store
+.vscode/*
+.idea/*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
