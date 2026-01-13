@@ -1,4 +1,4 @@
-let v={mode:"create"},n=null;function S(){const t=document.querySelector('.live-time span[aria-hidden="true"]');return t!=null&&t.textContent?x(t.textContent):null}function E(){const t=window.location.pathname.split("/");return t[1]==="video"||t[1]==="videos"}function T(){const t=window.location.href;if(t.includes("youtube.com")){const e=document.querySelector("video"),o=new URLSearchParams(window.location.search).get("v"),i=document.querySelector("h1.ytd-video-primary-info-renderer, h1.ytd-watch-metadata yt-formatted-string"),r=(i==null?void 0:i.textContent)||document.title.replace(" - YouTube","");if(e&&o)return{videoId:o,videoTitle:r,platform:"youtube",currentTime:e.currentTime}}if(t.includes("twitch.tv")){const e=document.querySelector("video"),o=window.location.pathname.split("/"),i=o[1],r=E(),d=r?o[2]:null,a=document.querySelector('[data-a-target="stream-title"], h2[data-a-target="stream-title"]'),c=(a==null?void 0:a.textContent)||document.title.replace(" - Twitch","");if(e){const u=r?e.currentTime:S()??e.currentTime;return{videoId:d||i,videoTitle:c,platform:"twitch",currentTime:u}}}return null}function _(){if(window.location.href.includes("twitch.tv")&&!E()){const o=S();if(o!==null)return o}const e=document.querySelector("video");return e?e.currentTime:null}function b(t){const e=Math.floor(t/3600),o=Math.floor(t%3600/60),i=Math.floor(t%60);return`${e.toString().padStart(2,"0")}:${o.toString().padStart(2,"0")}:${i.toString().padStart(2,"0")}`}function x(t){const e=t.split(":").map(o=>parseInt(o,10));return e.some(isNaN)?null:e.length===3?e[0]*3600+e[1]*60+e[2]:e.length===2?e[0]*60+e[1]:e.length===1?e[0]:null}function A(){return`${Date.now()}-${Math.random().toString(36).substr(2,9)}`}function M(){n&&n.remove(),n=document.createElement("div"),n.id="vodts-modal-container",document.body.appendChild(n),q()}function q(){if(!n)return;const{mode:t,timestamp:e,currentTime:o,videoInfo:i}=v,r=t==="edit",d=t==="endTime",a=r&&e?b(e.time):o!==void 0?b(o):"",c=r&&(e!=null&&e.endTime)?b(e.endTime):d&&o!==void 0?b(o):"",u=r&&e?e.text:"",p=r?"Edit Timestamp":d?"Add End Time":"New Timestamp",y=r?"Save":d?"Add End Time":"Create";n.innerHTML=`
+let f={mode:"create"},i=null;function M(){const t=document.querySelector('.live-time span[aria-hidden="true"]');return t!=null&&t.textContent?x(t.textContent):null}function I(){const t=window.location.pathname.split("/");return t[1]==="video"||t[1]==="videos"}function T(){const t=window.location.href;if(t.includes("youtube.com")){const e=document.querySelector("video"),o=new URLSearchParams(window.location.search).get("v"),n=document.querySelector("h1.ytd-video-primary-info-renderer, h1.ytd-watch-metadata yt-formatted-string"),d=(n==null?void 0:n.textContent)||document.title.replace(" - YouTube","");if(e&&o)return{videoId:o,videoTitle:d,platform:"youtube",currentTime:e.currentTime}}if(t.includes("twitch.tv")){const e=document.querySelector("video"),o=window.location.pathname.split("/"),n=o[1],d=I(),r=d?o[2]:null,a=document.querySelector('[data-a-target="stream-title"], h2[data-a-target="stream-title"]'),s=(a==null?void 0:a.textContent)||document.title.replace(" - Twitch","");if(e){const u=d?e.currentTime:M()??e.currentTime;return{videoId:r||n,videoTitle:s,platform:"twitch",currentTime:u}}}return null}function q(){if(window.location.href.includes("twitch.tv")&&!I()){const o=M();if(o!==null)return o}const e=document.querySelector("video");return e?e.currentTime:null}function y(t){const e=Math.floor(t/3600),o=Math.floor(t%3600/60),n=Math.floor(t%60);return`${e.toString().padStart(2,"0")}:${o.toString().padStart(2,"0")}:${n.toString().padStart(2,"0")}`}function x(t){const e=t.split(":").map(o=>parseInt(o,10));return e.some(isNaN)?null:e.length===3?e[0]*3600+e[1]*60+e[2]:e.length===2?e[0]*60+e[1]:e.length===1?e[0]:null}function $(){return`${Date.now()}-${Math.random().toString(36).substr(2,9)}`}function C(){i&&i.remove(),i=document.createElement("div"),i.id="vodts-modal-container",document.body.appendChild(i),D()}function D(){if(!i)return;const{mode:t,timestamp:e,currentTime:o,videoInfo:n}=f,d=t==="edit",r=t==="endTime",a=d&&e?y(e.time):o!==void 0?y(o):"",s=d&&(e!=null&&e.endTime)?y(e.endTime):r&&o!==void 0?y(o):"",u=d&&e?e.text:"",h=d?"Edit Timestamp":r?"Add End Time":"New Timestamp",m=d?"Save":r?"Add End Time":"Create";i.innerHTML=`
         <style>
             #vodts-modal-overlay {
                 position: fixed;
@@ -134,6 +134,16 @@ let v={mode:"create"},n=null;function S(){const t=document.querySelector('.live-
                 color: #f0f0f0;
             }
 
+            .vodts-btn-chapter {
+                background: linear-gradient(135deg, #ff8c4d, #ffaa4d);
+                color: white;
+            }
+
+            .vodts-btn-chapter:hover {
+                background: linear-gradient(135deg, #ffaa4d, #ffbb6b);
+                transform: translateY(-1px);
+            }
+
             .vodts-hint {
                 font-size: 10px;
                 color: #555;
@@ -143,9 +153,9 @@ let v={mode:"create"},n=null;function S(){const t=document.querySelector('.live-
         </style>
         <div id="vodts-modal-overlay">
             <div id="vodts-modal">
-                <h2>${p}</h2>
+                <h2>${h}</h2>
 
-                ${d?"":`
+                ${r?"":`
                     <div class="vodts-input-group">
                         <label>Description</label>
                         <input type="text" id="vodts-text-input" placeholder="What's happening here?" value="${u}" autofocus>
@@ -153,27 +163,28 @@ let v={mode:"create"},n=null;function S(){const t=document.querySelector('.live-
                 `}
 
                 <div class="vodts-time-row">
-                    ${d?"":`
+                    ${r?"":`
                         <div class="vodts-input-group">
                             <label>Start Time</label>
                             <input type="text" id="vodts-time-input" placeholder="0:00" value="${a}">
                         </div>
                     `}
                     <div class="vodts-input-group">
-                        <label>End Time ${d?"":"(optional)"}</label>
-                        <input type="text" id="vodts-endtime-input" placeholder="0:00" value="${c}" ${d?"autofocus":""}>
+                        <label>End Time ${r?"":"(optional)"}</label>
+                        <input type="text" id="vodts-endtime-input" placeholder="0:00" value="${s}" ${r?"autofocus":""}>
                     </div>
                 </div>
 
                 <div class="vodts-buttons">
                     <button class="vodts-btn vodts-btn-secondary" id="vodts-cancel-btn">Cancel</button>
-                    <button class="vodts-btn vodts-btn-primary" id="vodts-submit-btn">${y}</button>
+                    ${t==="create"?'<button class="vodts-btn vodts-btn-chapter" id="vodts-chapter-btn">Chapter</button>':""}
+                    <button class="vodts-btn vodts-btn-primary" id="vodts-submit-btn">${m}</button>
                 </div>
 
-                <p class="vodts-hint">Press Escape to cancel • Enter to submit</p>
+                <p class="vodts-hint">Escape to cancel${t==="create"?" • Shift+Enter for chapter":""} • Enter to submit</p>
             </div>
         </div>
-    `;const s=n.querySelector("#vodts-modal-overlay"),l=n.querySelector("#vodts-cancel-btn"),m=n.querySelector("#vodts-submit-btn"),g=n.querySelector("#vodts-text-input");n.querySelector("#vodts-time-input");const h=n.querySelector("#vodts-endtime-input");s==null||s.addEventListener("click",k=>{k.target===s&&f()}),l==null||l.addEventListener("click",f),m==null||m.addEventListener("click",C),document.addEventListener("keydown",I),setTimeout(()=>{d&&h?(h.focus(),h.select()):g&&g.focus()},50)}function I(t){t.key==="Escape"?f():t.key==="Enter"&&C()}function C(){const t=n==null?void 0:n.querySelector("#vodts-text-input"),e=n==null?void 0:n.querySelector("#vodts-time-input"),o=n==null?void 0:n.querySelector("#vodts-endtime-input"),{mode:i,timestamp:r,videoInfo:d}=v;if(i==="endTime"&&r){const s=(o==null?void 0:o.value.trim())||"",l=x(s);if(l!==null){const m={...r,endTime:l};chrome.runtime.sendMessage({type:"UPDATE_TIMESTAMP",payload:m})}f();return}const a=(t==null?void 0:t.value.trim())||"",c=(e==null?void 0:e.value.trim())||"",u=(o==null?void 0:o.value.trim())||"";if(!a||!c){t&&!a&&(t.style.borderColor="#ff4d4d"),e&&!c&&(e.style.borderColor="#ff4d4d");return}const p=x(c),y=u?x(u):void 0;if(p===null){e&&(e.style.borderColor="#ff4d4d");return}if(i==="edit"&&r){const s={...r,text:a,time:p,endTime:y??r.endTime};chrome.runtime.sendMessage({type:"UPDATE_TIMESTAMP",payload:s})}else if(d){const s={id:A(),text:a,time:p,endTime:y??void 0,videoId:d.videoId,videoTitle:d.videoTitle,platform:d.platform,createdAt:Date.now()};chrome.runtime.sendMessage({type:"SAVE_TIMESTAMP",payload:s})}f()}function f(){document.removeEventListener("keydown",I),n&&(n.remove(),n=null),v={isOpen:!1,mode:"create"}}function $(){const t=T();t&&(v={isOpen:!0,mode:"create",currentTime:t.currentTime,videoInfo:t},M())}const P=359999;async function D(){const t=T();if(!t)return;const i=((await chrome.storage.local.get("vodts_timestamps")).vodts_timestamps||[]).filter(a=>a.videoId===t.videoId&&a.endTime===P).sort((a,c)=>c.createdAt-a.createdAt)[0];if(!i){w("No open chapter to close");return}const r=Math.floor(t.currentTime),d={...i,endTime:r};chrome.runtime.sendMessage({type:"UPDATE_TIMESTAMP",payload:d}),w(`Closed chapter: ${i.text}`)}function z(t){const e=T();v={isOpen:!0,mode:"edit",timestamp:t,videoInfo:e||void 0},M()}function w(t){const e=document.createElement("div");e.style.cssText=`
+    `;const p=i.querySelector("#vodts-modal-overlay"),c=i.querySelector("#vodts-cancel-btn"),l=i.querySelector("#vodts-submit-btn"),v=i.querySelector("#vodts-chapter-btn"),S=i.querySelector("#vodts-text-input");i.querySelector("#vodts-time-input");const g=i.querySelector("#vodts-endtime-input");p==null||p.addEventListener("click",A=>{A.target===p&&b()}),c==null||c.addEventListener("click",b),l==null||l.addEventListener("click",()=>w(!1)),v==null||v.addEventListener("click",()=>w(!0)),document.addEventListener("keydown",k),setTimeout(()=>{r&&g?(g.focus(),g.select()):S&&S.focus()},50)}function k(t){if(t.key==="Escape")b();else if(t.key==="Enter"){t.preventDefault();const e=t.shiftKey&&f.mode==="create";w(e)}}function w(t=!1){const e=i==null?void 0:i.querySelector("#vodts-text-input"),o=i==null?void 0:i.querySelector("#vodts-time-input"),n=i==null?void 0:i.querySelector("#vodts-endtime-input"),{mode:d,timestamp:r,videoInfo:a}=f;if(d==="endTime"&&r){const c=(n==null?void 0:n.value.trim())||"",l=x(c);if(l!==null){const v={...r,endTime:l};chrome.runtime.sendMessage({type:"UPDATE_TIMESTAMP",payload:v})}b();return}const s=(e==null?void 0:e.value.trim())||"",u=(o==null?void 0:o.value.trim())||"",h=(n==null?void 0:n.value.trim())||"";if(!s||!u){e&&!s&&(e.style.borderColor="#ff4d4d"),o&&!u&&(o.style.borderColor="#ff4d4d");return}const m=x(u),p=h?x(h):void 0;if(m===null){o&&(o.style.borderColor="#ff4d4d");return}if(d==="edit"&&r){const c={...r,text:s,time:m,endTime:p??r.endTime};chrome.runtime.sendMessage({type:"UPDATE_TIMESTAMP",payload:c})}else if(a){const c=t?_:p??void 0,l={id:$(),text:s,time:m,endTime:c,videoId:a.videoId,videoTitle:a.videoTitle,platform:a.platform,createdAt:Date.now()};chrome.runtime.sendMessage({type:"SAVE_TIMESTAMP",payload:l})}b()}function b(){document.removeEventListener("keydown",k),i&&(i.remove(),i=null),f={isOpen:!1,mode:"create"}}function P(){const t=T();t&&(f={isOpen:!0,mode:"create",currentTime:t.currentTime,videoInfo:t},C())}const _=359999;async function L(){const t=T();if(!t)return;const n=((await chrome.storage.local.get("vodts_timestamps")).vodts_timestamps||[]).filter(a=>a.videoId===t.videoId&&a.endTime===_).sort((a,s)=>s.createdAt-a.createdAt)[0];if(!n){E("No open chapter to close");return}const d=Math.floor(t.currentTime),r={...n,endTime:d};chrome.runtime.sendMessage({type:"UPDATE_TIMESTAMP",payload:r}),E(`Closed chapter: ${n.text}`)}function z(t){const e=T();f={isOpen:!0,mode:"edit",timestamp:t,videoInfo:e||void 0},C()}function E(t){const e=document.createElement("div");e.style.cssText=`
         position: fixed;
         bottom: 20px;
         right: 20px;
@@ -192,4 +203,4 @@ let v={mode:"create"},n=null;function S(){const t=document.querySelector('.live-
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-    `,document.head.appendChild(o),e.textContent=t,document.body.appendChild(e),setTimeout(()=>{e.style.animation="vodts-slide-up 0.3s ease-out reverse",setTimeout(()=>{e.remove(),o.remove()},300)},2e3)}chrome.runtime.onMessage.addListener((t,e,o)=>{if(t.type==="GET_VIDEO_INFO"){const i=T();return o(i),!0}if(t.type==="GET_CURRENT_TIME"){const i=_();return o(i),!0}if(t.type==="CREATE_TIMESTAMP")return $(),o({success:!0}),!0;if(t.type==="ADD_END_TIME")return D(),o({success:!0}),!0;if(t.type==="EDIT_TIMESTAMP")return z(t.payload),o({success:!0}),!0;if(t.type==="SEEK_TO_TIME"){const i=document.querySelector("video");return i?(i.currentTime=t.payload.time,o({success:!0})):o({success:!1}),!0}return!1});console.log("VodTS content script loaded");
+    `,document.head.appendChild(o),e.textContent=t,document.body.appendChild(e),setTimeout(()=>{e.style.animation="vodts-slide-up 0.3s ease-out reverse",setTimeout(()=>{e.remove(),o.remove()},300)},2e3)}chrome.runtime.onMessage.addListener((t,e,o)=>{if(t.type==="GET_VIDEO_INFO"){const n=T();return o(n),!0}if(t.type==="GET_CURRENT_TIME"){const n=q();return o(n),!0}if(t.type==="CREATE_TIMESTAMP")return P(),o({success:!0}),!0;if(t.type==="ADD_END_TIME")return L(),o({success:!0}),!0;if(t.type==="EDIT_TIMESTAMP")return z(t.payload),o({success:!0}),!0;if(t.type==="SEEK_TO_TIME"){const n=document.querySelector("video");return n?(n.currentTime=t.payload.time,o({success:!0})):o({success:!1}),!0}return!1});console.log("VodTS content script loaded");

@@ -277,6 +277,16 @@ function renderModal() {
                 color: #f0f0f0;
             }
 
+            .vodts-btn-chapter {
+                background: linear-gradient(135deg, #ff8c4d, #ffaa4d);
+                color: white;
+            }
+
+            .vodts-btn-chapter:hover {
+                background: linear-gradient(135deg, #ffaa4d, #ffbb6b);
+                transform: translateY(-1px);
+            }
+
             .vodts-hint {
                 font-size: 10px;
                 color: #555;
@@ -310,10 +320,11 @@ function renderModal() {
 
                 <div class="vodts-buttons">
                     <button class="vodts-btn vodts-btn-secondary" id="vodts-cancel-btn">Cancel</button>
+                    ${mode === 'create' ? `<button class="vodts-btn vodts-btn-chapter" id="vodts-chapter-btn">Chapter</button>` : ''}
                     <button class="vodts-btn vodts-btn-primary" id="vodts-submit-btn">${submitText}</button>
                 </div>
 
-                <p class="vodts-hint">Press Escape to cancel • Enter to submit</p>
+                <p class="vodts-hint">Escape to cancel${mode === 'create' ? ' • Shift+Enter for chapter' : ''} • Enter to submit</p>
             </div>
         </div>
     `;
@@ -321,6 +332,7 @@ function renderModal() {
     const overlay = modalElement.querySelector('#vodts-modal-overlay');
     const cancelBtn = modalElement.querySelector('#vodts-cancel-btn');
     const submitBtn = modalElement.querySelector('#vodts-submit-btn');
+    const chapterBtn = modalElement.querySelector('#vodts-chapter-btn');
     const textInput = modalElement.querySelector('#vodts-text-input') as HTMLInputElement | null;
     const timeInput = modalElement.querySelector('#vodts-time-input') as HTMLInputElement | null;
     const endTimeInput = modalElement.querySelector('#vodts-endtime-input') as HTMLInputElement | null;
@@ -330,7 +342,8 @@ function renderModal() {
     });
 
     cancelBtn?.addEventListener('click', closeModal);
-    submitBtn?.addEventListener('click', handleSubmit);
+    submitBtn?.addEventListener('click', () => handleSubmit(false));
+    chapterBtn?.addEventListener('click', () => handleSubmit(true));
 
     document.addEventListener('keydown', handleKeydown);
 
@@ -348,11 +361,13 @@ function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
         closeModal();
     } else if (e.key === 'Enter') {
-        handleSubmit();
+        e.preventDefault();
+        const asChapter = e.shiftKey && modalState.mode === 'create';
+        handleSubmit(asChapter);
     }
 }
 
-function handleSubmit() {
+function handleSubmit(asChapter: boolean = false) {
     const textInput = modalElement?.querySelector('#vodts-text-input') as HTMLInputElement | null;
     const timeInput = modalElement?.querySelector('#vodts-time-input') as HTMLInputElement | null;
     const endTimeInput = modalElement?.querySelector('#vodts-endtime-input') as HTMLInputElement | null;
@@ -414,11 +429,12 @@ function handleSubmit() {
             payload: updatedTimestamp,
         });
     } else if (videoInfo) {
+        const finalEndTime = asChapter ? CHAPTER_END_TIME : (endTime ?? undefined);
         const newTimestamp: Timestamp = {
             id: generateId(),
             text,
             time,
-            endTime: endTime ?? undefined,
+            endTime: finalEndTime,
             videoId: videoInfo.videoId,
             videoTitle: videoInfo.videoTitle,
             platform: videoInfo.platform,
