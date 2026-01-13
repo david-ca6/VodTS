@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Timestamp, VideoInfo, YtdlpSettings } from '../types';
-import { getTimestampsForVideo, deleteTimestamp, deleteTimestampsForVideo, formatTime, saveTimestamp, generateId, parseTime, getSettings } from '../utils/storage';
+import { getTimestampsForVideo, deleteTimestamp, deleteTimestampsForVideo, formatTime, saveTimestamp, generateId, parseTime, getSettings, isChapter, CHAPTER_END_TIME } from '../utils/storage';
 import TimestampItem from './components/TimestampItem';
 import Header from './components/Header';
 import Settings from './components/Settings';
@@ -71,7 +71,8 @@ export default function App() {
 
     function formatTimestampForClipboard(ts: Timestamp): string {
         const timeStr = formatTime(ts.time);
-        const endTimeStr = (ts.endTime && ytdlpSettings.normalTimestampIncludeEnd) ? ` - ${formatTime(ts.endTime)}` : '';
+        const isChapterMarker = isChapter(ts);
+        const endTimeStr = (ts.endTime && !isChapterMarker && ytdlpSettings.normalTimestampIncludeEnd) ? ` - ${formatTime(ts.endTime)}` : '';
         const textPrefix = ts.endTime === undefined ? '.' : '';
         return `~${timeStr}${endTimeStr} ${textPrefix}${ts.text}`;
     }
@@ -87,8 +88,9 @@ export default function App() {
     }
 
     function formatTimestampYouTube(ts: Timestamp): string {
+        const isChapterMarker = isChapter(ts);
         if (ts.endTime !== undefined) {
-            if (ytdlpSettings.youtubeTimestampIncludeEnd) {
+            if (ytdlpSettings.youtubeTimestampIncludeEnd && !isChapterMarker) {
                 return `[${formatTime(ts.time)} - ${formatTime(ts.endTime)}] *${ts.text}*`;
             } else {
                 return `[${formatTime(ts.time)}] *${ts.text}*`;
@@ -191,7 +193,8 @@ export default function App() {
                     const startTime = parseTime(match[1]);
                     const endTime = match[2] ? parseTime(match[2]) : undefined;
                     let text = match[3].trim();
-                    if (endTime === undefined && text.startsWith('.')) {
+                    const hasChildPrefix = text.startsWith('.');
+                    if (hasChildPrefix) {
                         text = text.slice(1);
                     }
                     
@@ -205,7 +208,7 @@ export default function App() {
                             videoTitle: videoInfo.videoTitle,
                             platform: videoInfo.platform,
                             createdAt: Date.now(),
-                            isChapter: endTime !== undefined,
+                            isChapter: endTime !== undefined || !hasChildPrefix,
                         });
                     }
                 }
@@ -220,6 +223,15 @@ export default function App() {
                             break;
                         }
                     }
+                }
+            }
+
+            for (let i = parsedTimestamps.length - 1; i >= 0; i--) {
+                if (parsedTimestamps[i].isChapter) {
+                    if (parsedTimestamps[i].endTime === undefined) {
+                        parsedTimestamps[i].endTime = CHAPTER_END_TIME;
+                    }
+                    break;
                 }
             }
 
@@ -240,6 +252,18 @@ export default function App() {
         loadTimestamps();
     }
 
+    async function handleAddTimestamp() {
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab.id) {
+                await chrome.tabs.sendMessage(tab.id, { type: 'CREATE_TIMESTAMP' });
+                window.close();
+            }
+        } catch (err) {
+            console.error('Failed to create timestamp:', err);
+        }
+    }
+
     const displayTimestamps = timestamps;
 
     if (showSettings) {
@@ -257,6 +281,7 @@ export default function App() {
                 onPaste={handlePaste}
                 onClearAll={handleClearAll}
                 onOpenSettings={() => setShowSettings(true)}
+                onAddTimestamp={handleAddTimestamp}
                 copied={copied}
                 copiedYT={copiedYT}
             />

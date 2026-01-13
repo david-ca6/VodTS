@@ -3,6 +3,12 @@ import { Timestamp, YtdlpSettings } from '../types';
 const STORAGE_KEY = 'vodts_timestamps';
 const SETTINGS_KEY = 'vodts_settings';
 
+export const CHAPTER_END_TIME = 359999;
+
+export function isChapter(timestamp: Timestamp): boolean {
+    return timestamp.endTime === CHAPTER_END_TIME;
+}
+
 const DEFAULT_SETTINGS: YtdlpSettings = {
     youtubeCommand: 'yt-dlp',
     twitchCommand: 'yt-dlp',

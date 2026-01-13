@@ -10,11 +10,12 @@ interface HeaderProps {
     onPaste: () => void;
     onClearAll: () => void;
     onOpenSettings: () => void;
+    onAddTimestamp: () => void;
     copied: boolean;
     copiedYT: boolean;
 }
 
-export default function Header({ videoInfo, timestampCount, pageUrl, onCopyAll, onCopyYouTube, onPaste, onClearAll, onOpenSettings, copied, copiedYT }: HeaderProps) {
+export default function Header({ videoInfo, timestampCount, pageUrl, onCopyAll, onCopyYouTube, onPaste, onClearAll, onOpenSettings, onAddTimestamp, copied, copiedYT }: HeaderProps) {
     const [showPasteSuccess, setShowPasteSuccess] = useState(false);
     const [showClearSuccess, setShowClearSuccess] = useState(false);
 
@@ -50,29 +51,18 @@ export default function Header({ videoInfo, timestampCount, pageUrl, onCopyAll, 
                         <p className="text-[10px] text-vod-text-muted">{timestampCount} timestamp{timestampCount !== 1 ? 's' : ''}</p>
                     </div>
                 </div>
-
                 <div className="flex gap-1">
-                    {pageUrl && (
+                    {videoInfo && (
                         <button
-                            onClick={handleOpenClipIT}
-                            className="p-1.5 rounded-md transition-all bg-vod-surface text-vod-text-muted hover:text-vod-accent hover:bg-vod-border"
-                            title="Open in ClipIT"
+                            onClick={onAddTimestamp}
+                            className="p-1.5 rounded-md transition-all bg-vod-accent text-white hover:bg-vod-accent/80"
+                            title="Add timestamp"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
                         </button>
                     )}
-                    <button
-                        onClick={onOpenSettings}
-                        className="p-1.5 rounded-md transition-all bg-vod-surface text-vod-text-muted hover:text-vod-text hover:bg-vod-border"
-                        title="Settings"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    </button>
                     <button
                         onClick={handlePaste}
                         className={`p-1.5 rounded-md transition-all ${
@@ -153,6 +143,28 @@ export default function Header({ videoInfo, timestampCount, pageUrl, onCopyAll, 
                             </button>
                         </>
                     )}
+
+                    {pageUrl && (
+                        <button
+                            onClick={handleOpenClipIT}
+                            className="p-1.5 rounded-md transition-all bg-vod-surface text-vod-text-muted hover:text-vod-accent hover:bg-vod-border"
+                            title="Open in ClipIT"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+                            </svg>
+                        </button>
+                    )}
+                    <button
+                        onClick={onOpenSettings}
+                        className="p-1.5 rounded-md transition-all bg-vod-surface text-vod-text-muted hover:text-vod-text hover:bg-vod-border"
+                        title="Settings"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </button>
                 </div>
             </div>
 

@@ -457,6 +457,38 @@ function showCreateModal() {
     createModal();
 }
 
+const CHAPTER_END_TIME = 359999;
+
+async function closeChapter() {
+    const videoInfo = getVideoInfo();
+    if (!videoInfo) return;
+
+    const result = await chrome.storage.local.get('vodts_timestamps');
+    const timestamps: Timestamp[] = result.vodts_timestamps || [];
+
+    const openChapter = timestamps
+        .filter(t => t.videoId === videoInfo.videoId && t.endTime === CHAPTER_END_TIME)
+        .sort((a, b) => b.createdAt - a.createdAt)[0];
+
+    if (!openChapter) {
+        showNotification('No open chapter to close');
+        return;
+    }
+
+    const currentTime = Math.floor(videoInfo.currentTime);
+    const updatedTimestamp: Timestamp = {
+        ...openChapter,
+        endTime: currentTime,
+    };
+
+    chrome.runtime.sendMessage({
+        type: 'UPDATE_TIMESTAMP',
+        payload: updatedTimestamp,
+    });
+
+    showNotification(`Closed chapter: ${openChapter.text}`);
+}
+
 async function showEndTimeModal() {
     const videoInfo = getVideoInfo();
     if (!videoInfo) return;
@@ -558,7 +590,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
 
     if (message.type === 'ADD_END_TIME') {
-        showEndTimeModal();
+        closeChapter();
         sendResponse({ success: true });
         return true;
     }

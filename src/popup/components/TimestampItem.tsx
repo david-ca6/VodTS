@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Timestamp, YtdlpSettings } from '../../types';
-import { formatTime, formatTimeForYtdlp, parseTime } from '../../utils/storage';
+import { formatTime, formatTimeForYtdlp, parseTime, isChapter } from '../../utils/storage';
 
 interface TimestampItemProps {
     timestamp: Timestamp;
@@ -28,7 +28,8 @@ export default function TimestampItem({ timestamp, onDelete, showVideo, index, p
         }
     }, [showMenu]);
 
-    const timeDisplay = timestamp.endTime
+    const isChapterMarker = isChapter(timestamp);
+    const timeDisplay = (timestamp.endTime && !isChapterMarker)
         ? `${formatTime(timestamp.time)} - ${formatTime(timestamp.endTime)}`
         : formatTime(timestamp.time);
 

@@ -38,7 +38,8 @@ YouTube timestamps format. This format use a format that is easier to read in yo
 [03:25:17 - 03:25:58] *Ending Screen*
 ```
 
-`Example without Chapter end time:`
+`Example without Chapter end time:`  
+(without end time, the end time will be inferred from the next chapter)
 ```
 [00:00:00] *Starting Screen*
 [00:11:03] *Zatsudan*
@@ -100,7 +101,7 @@ https://www.youtube.com/watch?v=8Y8RWtHGgGQ
 2. Open Chrome (or any Chromium based browser) and navigate to `chrome://extensions`.
 3. Enable "Developer mode" in the top right corner.
 4. Click "Load unpacked."
-5. Select the `unpacked` folder and click "Open."
+5. Select the dist folder in the extracted folder and click "Open."
 
 ### Chromium
 
@@ -117,7 +118,7 @@ https://www.youtube.com/watch?v=8Y8RWtHGgGQ
 2. Open Chromium and navigate to `chrome://extensions`.
 3. Enable "Developer mode" in the top right corner.
 4. Click "Load unpacked."
-5. Select the `unpacked` folder and click "Open."
+5. Select the dist folder in the extracted folder and click "Open."
 
 
 ## VodTS Versions
