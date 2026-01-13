@@ -1,0 +1,58 @@
+{
+    "manifest_version": 3,
+    "name": "VodTS - Video Timestamp Manager",
+    "version": "1.0.0",
+    "description": "Create and manage timestamps for YouTube and Twitch videos",
+    "permissions": [
+        "storage",
+        "activeTab",
+        "scripting",
+        "clipboardRead"
+    ],
+    "host_permissions": [
+        "https://www.youtube.com/*",
+        "https://youtube.com/*",
+        "https://www.twitch.tv/*",
+        "https://twitch.tv/*"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "128": "icons/icon128.png"
+        }
+    },
+    "icons": {
+        "128": "icons/icon128.png"
+    },
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://www.youtube.com/*",
+                "https://youtube.com/*",
+                "https://www.twitch.tv/*",
+                "https://twitch.tv/*"
+            ],
+            "js": ["content.js"]
+        }
+    ],
+    "commands": {
+        "create-timestamp": {
+            "suggested_key": {
+                "default": "Alt+T",
+                "mac": "Alt+T"
+            },
+            "description": "Create a new timestamp at current video time"
+        },
+        "add-end-time": {
+            "suggested_key": {
+                "default": "Alt+E",
+                "mac": "Alt+E"
+            },
+            "description": "Add end time to the last timestamp"
+        }
+    }
+}
